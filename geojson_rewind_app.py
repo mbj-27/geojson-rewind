@@ -28,7 +28,7 @@ if theme == "Dark":
         unsafe_allow_html=True
     )
 
-st.title("🌀 GeoJSON Winding Order Checker + Rewinder")
+st.title("GeoJSON Winding Order Check/Change")
 
 st.sidebar.header("Settings")
 mode = st.sidebar.radio("Mode", ["Single File", "Batch Upload (ZIP)"])
