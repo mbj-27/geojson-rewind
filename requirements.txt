@@ -1,0 +1,6 @@
+streamlit
+geojson-rewind
+folium
+streamlit-folium
+shapely
+geopandas
