@@ -1,7 +1,9 @@
+
+import streamlit as st
 # ✅ This must be the first Streamlit command
 st.set_page_config(layout="wide", page_title="GeoJSON Rewinder")
 
-import streamlit as st
+
 import json
 import os
 import zipfile
