@@ -1,5 +1,8 @@
-
 import streamlit as st
+
+# ✅ This must be the first Streamlit command
+st.set_page_config(layout="wide", page_title="GeoJSON Rewinder")
+
 import json
 import os
 import zipfile
@@ -20,16 +23,17 @@ if theme == "Dark":
             .stApp { background-color: #0e1117; }
             .css-1v0mbdj { background-color: #262730; }
             .css-1d391kg { color: white; }
-        </style>""", unsafe_allow_html=True
+        </style>""",
+        unsafe_allow_html=True
     )
 
-st.set_page_config(layout="wide", page_title="GeoJSON Rewinder")
 st.title("🌀 GeoJSON Winding Order Checker + Rewinder")
 
 st.sidebar.header("Settings")
 mode = st.sidebar.radio("Mode", ["Single File", "Batch Upload (ZIP)"])
 desired_winding = st.sidebar.radio("Desired Winding", ["Counterclockwise", "Clockwise"])
 force_ccw = desired_winding == "Counterclockwise"
+
 
 def calculate_signed_area(coords):
     x, y = zip(*coords)
