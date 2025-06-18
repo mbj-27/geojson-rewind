@@ -1,4 +1,3 @@
-
 import streamlit as st
 # ✅ This must be the first Streamlit command
 st.set_page_config(layout="wide", page_title="GeoJSON Rewinder")
@@ -14,14 +13,12 @@ from streamlit_folium import st_folium
 from shapely.geometry import shape
 from shapely.validation import explain_validity
 
-
 st.title("GeoJSON Winding Order Check/Change")
 
 st.sidebar.header("Settings")
 mode = st.sidebar.radio("Mode", ["Single File", "Batch Upload (ZIP)"])
 desired_winding = st.sidebar.radio("Desired Winding", ["Counterclockwise", "Clockwise"])
 force_ccw = desired_winding == "Counterclockwise"
-
 
 def calculate_signed_area(coords):
     x, y = zip(*coords)
@@ -132,32 +129,46 @@ if mode == "Batch Upload (ZIP)":
         with tempfile.TemporaryDirectory() as tmpdir:
             with zipfile.ZipFile(zip_file, 'r') as z:
                 z.extractall(tmpdir)
+
+            with st.spinner("Preparing file list..."):
+                geojson_file_paths = []
+                for root, _, files in os.walk(tmpdir):
+                    for fname in files:
+                        if fname.lower().endswith(".geojson"):
+                            geojson_file_paths.append(os.path.join(root, fname))
+
+            total_files = len(geojson_file_paths)
+            progress = st.progress(0, text="Rewinding files...")
+
             corrected_files = []
             log = []
-            for root, _, files in os.walk(tmpdir):
-                for fname in files:
-                    if fname.lower().endswith(".geojson"):
-                        path = os.path.join(root, fname)
-                        with open(path, "r", encoding="utf-8") as f:
-                            try:
-                                data = json.load(f)
-                                results = check_winding_and_geometry(data)
-                                clockwise_count = sum(1 for r in results if r["winding"] == "Clockwise")
-                                invalid_count = sum(1 for r in results if not r["valid"])
-                                should_rewind = (force_ccw and clockwise_count > 0) or (not force_ccw and clockwise_count < len(results))
-                                if should_rewind:
-                                    data = rewind(data, rfc7946=force_ccw)
-                                out_str = json.dumps(data, indent=2)
-                                corrected_files.append((fname.replace(".geojson", f"_{desired_winding}.geojson"), out_str))
-                                log.append(f"{fname}: {clockwise_count} clockwise, {invalid_count} invalid, {'rewound' if should_rewind else 'unchanged'}")
-                            except Exception as e:
-                                log.append(f"{fname}: ERROR - {e}")
+
+            for i, path in enumerate(geojson_file_paths):
+                fname = os.path.basename(path)
+                try:
+                    with open(path, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                        results = check_winding_and_geometry(data)
+                        clockwise_count = sum(1 for r in results if r["winding"] == "Clockwise")
+                        invalid_count = sum(1 for r in results if not r["valid"])
+                        should_rewind = (force_ccw and clockwise_count > 0) or (not force_ccw and clockwise_count < len(results))
+                        if should_rewind:
+                            data = rewind(data, rfc7946=force_ccw)
+                        out_str = json.dumps(data, indent=2)
+                        corrected_files.append((fname.replace(".geojson", f"_{desired_winding}.geojson"), out_str))
+                        log.append(f"{fname}: {clockwise_count} clockwise, {invalid_count} invalid, {'rewound' if should_rewind else 'unchanged'}")
+                except Exception as e:
+                    log.append(f"{fname}: ERROR - {e}")
+
+                progress.progress((i + 1) / total_files, text=f"Processing {fname} ({i+1}/{total_files})")
+
             zip_buffer = BytesIO()
             with zipfile.ZipFile(zip_buffer, "w") as zf:
                 for name, content in corrected_files:
                     zf.writestr(name, content)
                 zf.writestr("processing_log.txt", "\n".join(log))
             zip_buffer.seek(0)
+
             st.success(f"{len(corrected_files)} files processed.")
             st.download_button("Download Corrected Files (ZIP)",
                                zip_buffer,
