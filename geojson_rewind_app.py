@@ -3,7 +3,6 @@ import streamlit as st
 # ✅ This must be the first Streamlit command
 st.set_page_config(layout="wide", page_title="GeoJSON Rewinder")
 
-
 import json
 import os
 import zipfile
@@ -15,18 +14,6 @@ from streamlit_folium import st_folium
 from shapely.geometry import shape
 from shapely.validation import explain_validity
 
-# --- Theme Toggle ---
-theme = st.sidebar.selectbox("Choose Theme", ["Light", "Dark"])
-if theme == "Dark":
-    st.markdown(
-        """<style>
-            body { background-color: #0e1117; color: white; }
-            .stApp { background-color: #0e1117; }
-            .css-1v0mbdj { background-color: #262730; }
-            .css-1d391kg { color: white; }
-        </style>""",
-        unsafe_allow_html=True
-    )
 
 st.title("GeoJSON Winding Order Check/Change")
 
