@@ -114,7 +114,7 @@ if mode == "Single File":
         st.info(f"🧭 Checked {len(results)} rings: {clockwise_count} clockwise, {invalid_count} invalid.")
         with st.expander("🗺 Interactive Map Preview"):
             fmap = styled_geojson_layer(geojson_data, results)
-            st_folium(fmap, height=500)
+            st_folium(fmap, width="100%", height=600)
         if (force_ccw and clockwise_count > 0) or (not force_ccw and clockwise_count < len(results)):
             if st.button("Fix Winding and Download"):
                 corrected = rewind(geojson_data, rfc7946=force_ccw)
